@@ -8,6 +8,5 @@ def process_csv_file(csv_file) -> list[str]:
         # next(reader, None)
         for row in reader:
             trade_data.append(row)
-    print(trade_data)
     return trade_data
             

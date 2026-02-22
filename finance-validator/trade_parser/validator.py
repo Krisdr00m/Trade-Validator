@@ -1,4 +1,4 @@
-from trade_parser.models import Trade
+from models import Trade
 from datetime import datetime
 import re
 
@@ -28,7 +28,6 @@ def check_data(trade_data: list[str], invalid_rows):
                     print("int issue")
                 elif e.args[0].rfind("isoformat") > 0:
                     print("time issue")
-                print(row)
     return (next_step_data)
 
 def clean_data(trade_data_objects, invalid_rows):
