@@ -20,3 +20,5 @@ dist/
 
 # Ignore your project's cache
 trade_parse/__pycache__/
+
+.DS_Store
