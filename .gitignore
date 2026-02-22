@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 
 # Ignore virtual environment folders
+.venv
 venv/
 Lib/
 Scripts/
