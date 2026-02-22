@@ -7,7 +7,7 @@ BROKER_PATTERN = re.compile(r"^BRK\d+$")
 
 RULES = [
     ("trade_id missing", lambda t: t.trade_id != ""),
-    ("trade_id format", lambda t: TRADE_ID_PATTERN.search(r"^T\d+$", t.trade_id) is not None),
+    ("trade_id format", lambda t: TRADE_ID_PATTERN.search(t.trade_id) is not None),
 
     ("price <= 0", lambda t: t.price > 0),
     ("quantity <= 0", lambda t: t.quantity > 0),
@@ -20,7 +20,7 @@ RULES = [
     ("symbol empty", lambda t: t.symbol.strip() != ""),
     ("symbol not uppercase", lambda t: t.symbol.isupper()),
 
-    ("invalid broker_id", lambda t: BROKER_PATTERN.search(r"^BRK\d+$", t.broker_id) is not None),
+    ("invalid broker_id", lambda t: BROKER_PATTERN.search(t.broker_id) is not None),
 ]
 
 def check_data(trade_data: list[list[str]], invalid_rows):
