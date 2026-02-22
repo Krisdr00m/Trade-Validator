@@ -2,81 +2,76 @@ from models import Trade
 from datetime import datetime
 import re
 
-def check_data(trade_data: list[str], invalid_rows):
-    if len(trade_data) > 0:
-        next_step_data = []
-        for row in trade_data:
-            try:
-                new_trade = Trade(
-                    trade_id= row[0], 
-                    symbol= row[1],
-                    price= float(row[2]),
-                    quantity=int(row[3]),
-                    timestamp= datetime.fromisoformat(row[4]),
-                    exchange=row[5],
-                    side=row[6],
-                    broker_id=row[7]
-                    )
+TRADE_ID_PATTERN = re.compile(r"^T\d+$")
+BROKER_PATTERN = re.compile(r"^BRK\d+$")
 
-                next_step_data.append(new_trade)
-            except ValueError as e:
-                invalid_rows.append(row)
+RULES = [
+    ("trade_id missing", lambda t: t.trade_id != ""),
+    ("trade_id format", lambda t: TRADE_ID_PATTERN.search(r"^T\d+$", t.trade_id) is not None),
+
+    ("price <= 0", lambda t: t.price > 0),
+    ("quantity <= 0", lambda t: t.quantity > 0),
+
+    ("invalid side", lambda t: t.side in ("BUY", "SELL")),
+
+    ("invalid exchange", lambda t: t.exchange in ("NASDAQ", "NYSE")),
+    ("exchange not uppercase", lambda t: t.exchange.isupper()),
+
+    ("symbol empty", lambda t: t.symbol.strip() != ""),
+    ("symbol not uppercase", lambda t: t.symbol.isupper()),
+
+    ("invalid broker_id", lambda t: BROKER_PATTERN.search(r"^BRK\d+$", t.broker_id) is not None),
+]
+
+def check_data(trade_data: list[list[str]], invalid_rows):
+    next_step_data = []
+    for row in trade_data:
+        
+        if len(row) != 8:
+            invalid_rows.append((row, "Wrong column count"))
+            continue
+    
+        try:
+            new_trade = Trade(
+                trade_id= row[0], 
+                symbol= row[1],
+                price= float(row[2]),
+                quantity=int(row[3]),
+                timestamp= datetime.fromisoformat(row[4]),
+                exchange=row[5],
+                side=row[6],
+                broker_id=row[7]
+                )
+
+            next_step_data.append(new_trade)
+        except (ValueError, TypeError) as e:
+            invalid_rows.append((row, str(e)))
                 
-                if e.args[0].rfind("float") > 0:
-                    print("float issue")
-                elif e.args[0].rfind("int") > 0:
-                    print("int issue")
-                elif e.args[0].rfind("isoformat") > 0:
-                    print("time issue")
+
     return (next_step_data)
 
 def clean_data(trade_data_objects, invalid_rows):
-    trade_id_set = set()
-    set_size: int
-    for index, data in enumerate(trade_data_objects):
-        set_size = len(trade_id_set)
-        
-        #trade id check
-        if data.trade_id is not "":
-            format = re.search(r"^T\d+", data.trade_id)
-            if format and any(char.isdigit() for char in data.trade_id ):
-                trade_id_set.add(data.trade_id)
-                if(set_size == len(trade_id_set)):
-                    trade_data_objects.pop(index)
-        else:
-            trade_data_objects.pop(index)
-            invalid_rows.append(data)
+    
+    valid_trades = []
+    seen_trade_ids = set()
 
-        #price check
-        if((data.price <= 0) or (data.quantity <= 0)):
-            trade_data_objects.pop(index)
-            invalid_rows.append(data)
-            
-        
-        #side check
-        if(data.side not in ("BUY", "SELL")):
-            trade_data_objects.pop(index)
-            invalid_rows.append(data)
-            
-        
-        #exchange check
-        if(data.exchange not in ("NASDAQ","NYSE") or not all(char.isupper() for char in data.exchange)):
-            trade_data_objects.pop(index)
-            invalid_rows.append(data)
-            
-        
-        #symbol check
-        if(data.symbol is "") or (data.symbol is " "):
-            trade_data_objects.pop(index)
-            invalid_rows.append(data)
-                
-        if not all(char.isupper() for char in data.symbol):
-            trade_data_objects.pop(index)
-            invalid_rows.append(data)
-            
-        #broke id check:
-        if(data.broker_id is "") or not re.search(r"^BRK\d+", data.broker_id):
-                trade_data_objects.pop(index)
-                invalid_rows.append(data)
-        
-    return trade_data_objects
+    for trade in trade_data_objects:
+
+        if trade.trade_id in seen_trade_ids:
+            invalid_rows.append((trade, "duplicate trade_id"))
+            continue
+
+        seen_trade_ids.add(trade.trade_id)
+
+        failed_reason = None
+        for reason, rule in RULES:
+            if not rule(trade):
+                failed_reason = reason
+                break
+
+        if failed_reason:
+            invalid_rows.append((trade, failed_reason))
+        else:
+            valid_trades.append(trade)
+
+    return valid_trades
