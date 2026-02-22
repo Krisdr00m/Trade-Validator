@@ -1,0 +1,21 @@
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore virtual environment folders
+venv/
+Lib/
+Scripts/
+Include/
+pyvenv.cfg
+
+# Ignore VS Code settings
+.vscode/
+
+# Ignore build artifacts
+build/
+dist/
+*.egg-info/
+
+# Ignore your project's cache
+trade_parse/__pycache__/
