@@ -9,7 +9,6 @@ def volume_by_symbol(trades: list[Trade]) -> dict[str, int]:
         except(KeyError):
             symbol_dict[trade.symbol] = trade.quantity
             
-    
     return symbol_dict
 
 def vwap_by_symbol(trades: list[Trade]) -> dict[str, float]:
@@ -47,3 +46,15 @@ def net_position_by_symbol(trades: list[Trade]) -> dict[str, int]:
                 net_position_dict[trade.symbol] = -(trade.quantity)
                 
     return net_position_dict
+
+def volume_by_broker(trades: list[Trade]) -> dict[str, int]:
+    broker_aggregation_dict = dict()
+    for trade in trades:
+        try:
+            if(broker_aggregation_dict[trade.broker_id]):
+                    broker_aggregation_dict[trade.broker_id] += trade.quantity
+                    
+        except KeyError:
+            broker_aggregation_dict[trade.broker_id] = trade.quantity
+    
+    return broker_aggregation_dict
