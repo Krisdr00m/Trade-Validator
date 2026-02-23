@@ -29,3 +29,21 @@ def vwap_by_symbol(trades: list[Trade]) -> dict[str, float]:
         vwap_by_symbol[key] = value/volume_dict[key]
     
     return vwap_by_symbol
+
+def net_position_by_symbol(trades: list[Trade]) -> dict[str, int]:
+    net_position_dict = dict()
+    for trade in trades:
+        try:
+            if(net_position_dict[trade.symbol]):
+                if trade.side == "BUY":
+                    net_position_dict[trade.symbol] += trade.quantity
+                else:
+                    net_position_dict[trade.symbol] -= trade.quantity
+                    
+        except KeyError:
+            if trade.side == "BUY":
+                net_position_dict[trade.symbol] = trade.quantity
+            else:
+                net_position_dict[trade.symbol] = -(trade.quantity)
+                
+    return net_position_dict
